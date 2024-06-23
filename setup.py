@@ -11,7 +11,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "vault_encrypter=vault_encrypter.main:main",
+            "tvault=tvault.main:main",
         ],
     },
     classifiers=[
