@@ -79,7 +79,10 @@ def do_encrypt(vault, interactive=True, password=None):
     return password
 
 def main():
-    CONTEXT = sys.argv[1]
+    CONTEXT = sys.argv[1] if len(sys.argv) > 1 else None
+    
+    if CONTEXT is None:
+        CONTEXT = "open"
 
     NO_INQUIRY = sys.argv[2] if len(sys.argv) > 2 else False
 
