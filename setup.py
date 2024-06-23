@@ -11,7 +11,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "tvault=tvault.main:main",
+            "tvault=tvault.vault:main",
         ],
     },
     classifiers=[
