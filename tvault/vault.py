@@ -154,11 +154,25 @@ def main():
                             choices=AVAILABLE_CONFIGS
                         ),
             ]
+            
+            
+
 
             inquiry = inquirer.prompt(questions)
             vault = inquiry["which_vault_to_encrypt"]
+            
+            
+            # check if .password exists
+            password_file_exists = os.path.exists(f"{vault}/.password")
 
-            do_encrypt(vault, interactive=True)
+            if password_file_exists:
+                with open(f"{vault}/.password", "r") as f:
+                    password = f.read()
+                    f.close()
+                print("Password cached inside the vault is used. Closing...")
+                do_encrypt(vault, interactive=False, password=password)
+            else:
+                do_encrypt(vault, interactive=True)
 
 if __name__ == "__main__":
     main()
