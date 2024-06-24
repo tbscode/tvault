@@ -10,9 +10,12 @@ from Crypto.Hash import SHA256
 from Crypto import Random
 import inquirer
 import time
+import json
+import stat
 
-def find_available_vaults():
-    return [name for name in os.listdir() if os.path.isdir(name) and name.endswith('.tvault')]
+def find_available_vaults(context="open"):
+    context_suffix = ".tvault.encrypted" if context == "open" else ".tvault"
+    return [name.replace(".encrypted", "") for name in os.listdir() if name.endswith(context_suffix)]
 
 def decrypt(key, source, decode=True):
     if decode:
@@ -29,7 +32,7 @@ def decrypt(key, source, decode=True):
 def decrypt_folder(key, folder_name):
     with open(f"{folder_name}.encrypted", "rb") as f:
         data = f.read()
-        decrypted = decrypt(bytes(key, "utf-8"), data, False)
+    decrypted = decrypt(bytes(key, "utf-8"), data, False)
 
     with open(f"{folder_name}.decrypted.zip", "wb") as f:
         f.write(decrypted)
@@ -38,6 +41,18 @@ def decrypt_folder(key, folder_name):
     shutil.unpack_archive(f"{folder_name}.decrypted.zip", folder_name)
     os.remove(f"{folder_name}.decrypted.zip")
     os.remove(f"{folder_name}.encrypted")
+    
+    has_permissions = os.path.exists(f"{folder_name}/.permissions.json")
+    if has_permissions:
+        # Restore file permissions
+        with open(f"{folder_name}/.permissions.json", "r") as f:
+            permissions = json.load(f)
+            f.close()
+
+        for file, perm in permissions.items():
+            os.chmod(os.path.join(folder_name, file), perm)
+        
+        os.remove(f"{folder_name}/.permissions.json")
 
 def encrypt(key, source, encode=True):
     key = SHA256.new(key).digest()
@@ -49,6 +64,17 @@ def encrypt(key, source, encode=True):
     return base64.b64encode(data).decode("latin-1") if encode else data
 
 def encrypt_folder(key, folder_path):
+    # Save file permissions
+    permissions = {}
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            filepath = os.path.join(root, file)
+            permissions[os.path.relpath(filepath, folder_path)] = os.stat(filepath).st_mode
+
+    with open(f"{folder_path}/.permissions.json", "w") as f:
+        json.dump(permissions, f)
+        f.close()
+
     shutil.make_archive(f"{folder_path}.toencrypt", 'zip', folder_path)
     with open(f"{folder_path}.toencrypt.zip", "rb") as f:
         encrypted = encrypt(bytes(key, "utf-8"), f.read(), False)
@@ -80,13 +106,15 @@ def do_encrypt(vault, interactive=True, password=None):
 
 def main():
     CONTEXT = sys.argv[1] if len(sys.argv) > 1 else None
-    
+
     if CONTEXT is None:
         CONTEXT = "open"
+        
+    print(f"Context: '{CONTEXT}'")
 
     NO_INQUIRY = sys.argv[2] if len(sys.argv) > 2 else False
 
-    AVAILABLE_CONFIGS = find_available_vaults()
+    AVAILABLE_CONFIGS = find_available_vaults(context=CONTEXT)
 
     if NO_INQUIRY:
         if CONTEXT == "open":
@@ -97,6 +125,21 @@ def main():
                 f.write(password)
                 f.close()
         elif CONTEXT == "close":
+            if NO_INQUIRY == "all":
+                AVAILABLE_CONFIGS = find_available_vaults(context="close")
+                for vault in AVAILABLE_CONFIGS:
+                    pw_files_exists = os.path.exists(f"{vault}/.password")
+                    if pw_files_exists:
+                        with open(f"{vault}/.password", "r") as f:
+                            password = f.read()
+                            f.close()
+                        print(f"Password cached inside the vault '{vault}' is used. Closing...")
+                        
+                        do_encrypt(vault, interactive=False, password=password)
+                    else:
+                        print(f"Not closing '{vault}' as password is not cached.")
+                return
+
             vault = NO_INQUIRY
             with open(f"{vault}/.password", "r") as f:
                 password = f.read()
@@ -119,6 +162,12 @@ def main():
             password = do_decrypt(vault, interactive=True)
 
             print(f"Vault '{vault}' decrypted successfully!")
+
+            with open(f"{vault}/.password", "w+") as f:
+                print("Cached password inside the vault.")
+                f.write(password)
+                f.close()
+
             print(f"The vault will be auto closed in 2 minutes. ( If you don't cancel this script )")
 
             def signal_handler(sig, frame):
@@ -154,14 +203,10 @@ def main():
                             choices=AVAILABLE_CONFIGS
                         ),
             ]
-            
-            
-
 
             inquiry = inquirer.prompt(questions)
             vault = inquiry["which_vault_to_encrypt"]
-            
-            
+
             # check if .password exists
             password_file_exists = os.path.exists(f"{vault}/.password")
 
