@@ -104,6 +104,33 @@ def do_encrypt(vault, interactive=True, password=None):
 
     return password
 
+def update_vault_db(vault_path, context="open"):
+    user = os.environ.get('USER')
+    vault_db_path = f"/home/{user}/.tvault_vault_db.json"
+    vault_db_present = os.path.exists(vault_db_path)
+    if not vault_db_present and (context == "open"):
+        with open(vault_db_path, "w+") as f:
+            json.dump([], f)
+    else:
+        if context == "open":
+            with open(vault_db_path, "r") as f:
+                vault_db = json.load(f)
+                f.close()
+            vault_db.append(vault_path)
+            with open(vault_db_path, "w") as f:
+                json.dump(vault_db, f)
+                f.close()
+        elif context == "close":
+            with open(vault_db_path, "r") as f:
+                vault_db = json.load(f)
+                f.close()
+            vault_db.remove(vault_path)
+            with open(vault_db_path, "w") as f:
+                json.dump(vault_db, f)
+                f.close()
+            if len(vault_db) == 0:
+                os.remove(vault_db_path)
+
 def main():
     CONTEXT = sys.argv[1] if len(sys.argv) > 1 else None
 
@@ -147,6 +174,7 @@ def main():
             os.remove(f"{vault}/.password")
             print("Password cached inside the vault is used.")
             do_encrypt(vault, interactive=False, password=password)
+        update_vault_db(NO_INQUIRY, context=CONTEXT)
     else:
         if CONTEXT == "open":
             questions = [
@@ -218,6 +246,7 @@ def main():
                 do_encrypt(vault, interactive=False, password=password)
             else:
                 do_encrypt(vault, interactive=True)
+        update_vault_db(vault, context=CONTEXT)
 
 if __name__ == "__main__":
     main()
