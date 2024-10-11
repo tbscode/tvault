@@ -1,7 +1,8 @@
 #!/bin/bash
-# 'wget https://raw.githubusercontent.com/tbscode/tvault/main/update.sh -o - | bash'
+# 'wget -qO- https://raw.githubusercontent.com/tbscode/tvault/main/update.sh | bash'
 
 mkdir -p /home/$USER/.config/tvault
+cd /home/$USER/.config/tvault
 if [ -d "/home/$USER/.config/tvault/venv" ]; then
     rm -rf /home/$USER/.config/tvault/venv
 fi

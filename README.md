@@ -1,7 +1,8 @@
 folder vault management and file encryption utility
 
-**installation**
+**installation / update**
 
 ```bash
-wget https://raw.githubusercontent.com/tbscode/tvault/main/install.sh -o - | bash
+wget -qO- https://raw.githubusercontent.com/tbscode/tvault/main/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/tbscode/tvault/main/update.sh | bash
 ```
