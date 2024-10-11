@@ -111,25 +111,25 @@ def update_vault_db(vault_path, context="open"):
     if not vault_db_present and (context == "open"):
         with open(vault_db_path, "w+") as f:
             json.dump([], f)
-    else:
-        if context == "open":
-            with open(vault_db_path, "r") as f:
-                vault_db = json.load(f)
-                f.close()
-            vault_db.append(vault_path)
-            with open(vault_db_path, "w") as f:
-                json.dump(vault_db, f)
-                f.close()
-        elif context == "close":
-            with open(vault_db_path, "r") as f:
-                vault_db = json.load(f)
-                f.close()
-            vault_db.remove(vault_path)
-            with open(vault_db_path, "w") as f:
-                json.dump(vault_db, f)
-                f.close()
-            if len(vault_db) == 0:
-                os.remove(vault_db_path)
+
+    if context == "open":
+        with open(vault_db_path, "r") as f:
+            vault_db = json.load(f)
+            f.close()
+        vault_db.append(vault_path)
+        with open(vault_db_path, "w") as f:
+            json.dump(vault_db, f)
+            f.close()
+    elif context == "close":
+        with open(vault_db_path, "r") as f:
+            vault_db = json.load(f)
+            f.close()
+        vault_db.remove(vault_path)
+        with open(vault_db_path, "w") as f:
+            json.dump(vault_db, f)
+            f.close()
+        if len(vault_db) == 0:
+            os.remove(vault_db_path)
 
 VAULT_ACTIONS = ["create", "closeall"]
 
