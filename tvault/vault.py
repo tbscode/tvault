@@ -131,11 +131,17 @@ def update_vault_db(vault_path, context="open"):
             if len(vault_db) == 0:
                 os.remove(vault_db_path)
 
+VAULT_ACTIONS = ["create", "closeall"]
+
 def main():
     CONTEXT = sys.argv[1] if len(sys.argv) > 1 else None
 
     if CONTEXT is None:
         CONTEXT = "open"
+        
+    if not (CONTEXT in ["open", "close"]):
+        if CONTEXT == "closeall":
+           pass 
         
     print(f"Context: '{CONTEXT}'")
 
@@ -151,6 +157,7 @@ def main():
                 print("Cached password inside the vault.")
                 f.write(password)
                 f.close()
+            update_vault_db(NO_INQUIRY, context="open")
         elif CONTEXT == "close":
             if NO_INQUIRY == "all":
                 AVAILABLE_CONFIGS = find_available_vaults(context="close")
@@ -174,7 +181,7 @@ def main():
             os.remove(f"{vault}/.password")
             print("Password cached inside the vault is used.")
             do_encrypt(vault, interactive=False, password=password)
-        update_vault_db(NO_INQUIRY, context=CONTEXT)
+            update_vault_db(NO_INQUIRY, context="close")
     else:
         if CONTEXT == "open":
             questions = [
@@ -197,6 +204,7 @@ def main():
                 f.close()
 
             print(f"The vault will be auto closed in 2 minutes. ( If you don't cancel this script )")
+            update_vault_db(vault, context=CONTEXT)
 
             def signal_handler(sig, frame):
                 print('You pressed Ctrl+C!')
@@ -204,6 +212,7 @@ def main():
                 close = input()
                 if close.lower() == "y":
                     do_encrypt(vault, interactive=False, password=password)
+                    update_vault_db(vault, context="close")
                     sys.exit(0)
                 else:
                     print("Vault will not be closed.")
@@ -223,6 +232,7 @@ def main():
                 padded_count = str(count).zfill(3)
                 print(f"Time left: {padded_count}", end='\r')
             do_encrypt(vault, interactive=False, password=password)
+            update_vault_db(vault, context="close")
 
         elif CONTEXT == "close":
             questions = [
@@ -246,7 +256,7 @@ def main():
                 do_encrypt(vault, interactive=False, password=password)
             else:
                 do_encrypt(vault, interactive=True)
-        update_vault_db(vault, context=CONTEXT)
+            update_vault_db(vault, context="close")
 
 if __name__ == "__main__":
     main()
