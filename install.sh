@@ -1,5 +1,4 @@
 #!/bin/bash
-# wget https://raw.githubusercontent.com/tbscode/tvault/main/install.sh -O - | bash
 
 mkdir -p /home/$USER/.config/tvault
 cd /home/$USER/.config/tvault
