@@ -155,7 +155,10 @@ def main():
                 print(f"Closing vault '{vault_name}' in '{vault_dir}'")
                 os.chdir(vault_dir)
                 try:
-                    do_encrypt(vault_name, interactive=False)
+                    with open(f"{vault_name}/.password", "r") as f:
+                        password = f.read()
+                        f.close()
+                    do_encrypt(vault_name, interactive=False, password=password)
                     update_vault_db(vault, context="close")
                 except Exception as e:
                     print(f"Failed to close vault '{vault_dir[-1]}'")
