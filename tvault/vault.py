@@ -152,7 +152,7 @@ def main():
             for full_vault_path in vault_db:
                 vault_dir = "/".join(full_vault_path.split("/")[:-1])
                 vault_name = full_vault_path.split("/")[-1]
-                print(f"Closing vault '{vault_dir[-1]}'")
+                print(f"Closing vault '{vault_name}' in '{vault_dir}'")
                 os.chdir(vault_dir)
                 try:
                     do_encrypt(vault_name, interactive=False)
