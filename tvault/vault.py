@@ -12,6 +12,8 @@ import inquirer
 import time
 import json
 import stat
+from subprocess import call, STDOUT
+import os
 
 def find_available_vaults(context="open"):
     context_suffix = ".tvault.encrypted" if context == "open" else ".tvault"
@@ -131,7 +133,7 @@ def update_vault_db(vault_path, context="open"):
         if len(vault_db) == 0:
             os.remove(vault_db_path)
 
-VAULT_ACTIONS = ["create", "closeall"]
+VAULT_ACTIONS = ["create", "closeall", "lock"]
 
 def main():
     CONTEXT = sys.argv[1] if len(sys.argv) > 1 else None
@@ -162,6 +164,37 @@ def main():
                     update_vault_db(full_vault_path, context="close")
                 except Exception as e:
                     print(f"Failed to close vault '{vault_name}'")
+        elif CONTEXT == "lock":
+            with open(f"/home/{os.environ.get('USER')}/.tvault_vault_db.json", "r") as f:
+                vault_db = json.load(f)
+                f.close()
+            for full_vault_path in vault_db:
+                current_date_time = time.strftime("%Y%m%d-%H%M%S")
+                close_success = False
+                vault_dir = "/".join(full_vault_path.split("/")[:-1])
+                vault_name = full_vault_path.split("/")[-1]
+                print(f"Closing vault '{vault_name}' in '{vault_dir}'")
+                os.chdir(vault_dir)
+                # check if it's a git directory
+                try:
+                    with open(f"{vault_name}/.password", "r") as f:
+                        password = f.read()
+                        f.close()
+                    do_encrypt(vault_name, interactive=False, password=password)
+                    update_vault_db(full_vault_path, context="close")
+                    close_success = True
+                except Exception as e:
+                    print(f"Failed to close vault '{vault_name}'")
+                if close_success:
+                    # check if it's a git dir
+                    if os.path.exists(f".git"):
+                        print(f"Git directory found. Committing and pushing changes...")
+                        try:
+                            call(["git", "add", f"{vault_name}.encrypted"], stdout=open(os.devnull, 'wb'), stderr=STDOUT)
+                            call(["git", "commit", "-m", f"Vault update {current_date_time}"], stdout=open(os.devnull, 'wb'), stderr=STDOUT)
+                            call(["git", "push"], stdout=open(os.devnull, 'wb'), stderr=STDOUT)
+                        except Exception as e:
+                            print(f"Failed to commit and push changes for '{vault_name}'")
         elif CONTEXT == "create":
             if NO_INQUIRY:
                 print("Please provide a vault name.")
