@@ -150,11 +150,12 @@ def main():
                 f.close()
 
             for full_vault_path in vault_db:
-                vault_dir = full_vault_path.split("/")[:-1]
+                vault_dir = "/".join(full_vault_path.split("/")[:-1])
+                vault_name = full_vault_path.split("/")[-1]
                 print(f"Closing vault '{vault_dir[-1]}'")
-                os.chdir(vault)
+                os.chdir(vault_dir)
                 try:
-                    do_encrypt(vault_dir[-1], interactive=False)
+                    do_encrypt(vault_name, interactive=False)
                     update_vault_db(vault, context="close")
                 except Exception as e:
                     print(f"Failed to close vault '{vault_dir[-1]}'")
