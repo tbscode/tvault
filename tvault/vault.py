@@ -159,9 +159,9 @@ def main():
                         password = f.read()
                         f.close()
                     do_encrypt(vault_name, interactive=False, password=password)
-                    update_vault_db(vault, context="close")
+                    update_vault_db(full_vault_path, context="close")
                 except Exception as e:
-                    print(f"Failed to close vault '{vault_dir[-1]}'")
+                    print(f"Failed to close vault '{vault_name}'")
         elif CONTEXT == "create":
             if NO_INQUIRY:
                 print("Please provide a vault name.")
