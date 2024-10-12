@@ -139,16 +139,51 @@ def main():
     if CONTEXT is None:
         CONTEXT = "open"
         
+    NO_INQUIRY = sys.argv[2] if len(sys.argv) > 2 else False
+    CWD = os.getcwd()
+
     if not (CONTEXT in ["open", "close"]):
+        assert CONTEXT in VAULT_ACTIONS, f"Invalid context '{CONTEXT}'"
         if CONTEXT == "closeall":
-           pass 
+            with open(f"/home/{os.environ.get('USER')}/.tvault_vault_db.json", "r") as f:
+                vault_db = json.load(f)
+                f.close()
+
+            for full_vault_path in vault_db:
+                vault_dir = full_vault_path.split("/")[:-1]
+                print(f"Closing vault '{vault_dir[-1]}'")
+                os.chdir(vault)
+                try:
+                    do_encrypt(vault_dir[-1], interactive=False)
+                    update_vault_db(vault, context="close")
+                except Exception as e:
+                    print(f"Failed to close vault '{vault_dir[-1]}'")
+        elif CONTEXT == "create":
+            if NO_INQUIRY:
+                print("Please provide a vault name.")
+                sys.exit(1)
+            vault = NO_INQUIRY
+            if not vault.endswith(".tvault"):
+                vault = f"{vault}.tvault"
+            if os.path.exists(vault):
+                print(f"Vault '{vault}' already exists.")
+                sys.exit(1)
+            print(f"Please set a password to encrypt the vault.")
+            password1 = getpass.getpass(prompt="Enter password 1st time:")
+            password2 = getpass.getpass(prompt="Enter password 2nd time:")
+            assert password1 == password2, "Passwords do not match."
+            os.mkdir(vault)
+            print(f"Vault '{vault}' created successfully.")
+            with open(f"{vault}/.password", "w+") as f:
+                f.write(password1)
+                f.close()
+            print(f"Password cached inside the vault. Run `tvault close {vault}` to close the vault.")
+            update_vault_db(f"{CWD}/{vault}", context="open")
         
     print(f"Context: '{CONTEXT}'")
 
-    NO_INQUIRY = sys.argv[2] if len(sys.argv) > 2 else False
 
     AVAILABLE_CONFIGS = find_available_vaults(context=CONTEXT)
-    CWD = os.getcwd()
 
     if NO_INQUIRY:
         if CONTEXT == "open":
