@@ -264,6 +264,10 @@ def main():
             ]
 
             inquiry = inquirer.prompt(questions)
+
+            if not inquiry:
+                print("No vault selected.")
+                sys.exit(1)
             vault = inquiry["which_vault_to_decrypt"]
 
             password = do_decrypt(vault, interactive=True)
@@ -315,6 +319,9 @@ def main():
             ]
 
             inquiry = inquirer.prompt(questions)
+            if not inquiry:
+                print("No vault selected.")
+                sys.exit(1)
             vault = inquiry["which_vault_to_encrypt"]
 
             # check if .password exists
