@@ -196,7 +196,7 @@ def main():
                         except Exception as e:
                             print(f"Failed to commit and push changes for '{vault_name}'")
         elif CONTEXT == "create":
-            if NO_INQUIRY:
+            if not NO_INQUIRY:
                 print("Please provide a vault name.")
                 sys.exit(1)
             vault = NO_INQUIRY
@@ -216,10 +216,9 @@ def main():
                 f.close()
             print(f"Password cached inside the vault. Run `tvault close {vault}` to close the vault.")
             update_vault_db(f"{CWD}/{vault}", context="open")
+        return
         
     print(f"Context: '{CONTEXT}'")
-
-
     AVAILABLE_CONFIGS = find_available_vaults(context=CONTEXT)
 
     if NO_INQUIRY:
