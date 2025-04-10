@@ -143,6 +143,11 @@ def main():
         
     NO_INQUIRY = sys.argv[2] if len(sys.argv) > 2 else False
     CWD = os.getcwd()
+    
+    # Parse additional arguments for password
+    PASSWORD_ARG = None
+    if len(sys.argv) > 3 and sys.argv[3] == "--password" and len(sys.argv) > 4:
+        PASSWORD_ARG = sys.argv[4]
 
     if not (CONTEXT in ["open", "close"]):
         assert CONTEXT in VAULT_ACTIONS, f"Invalid context '{CONTEXT}'"
@@ -224,7 +229,11 @@ def main():
     if NO_INQUIRY:
         if CONTEXT == "open":
             vault = NO_INQUIRY
-            password = do_decrypt(vault, interactive=True)
+            # Use provided password if available, otherwise prompt interactively
+            if PASSWORD_ARG:
+                password = do_decrypt(vault, interactive=False, password=PASSWORD_ARG)
+            else:
+                password = do_decrypt(vault, interactive=True)
             with open(f"{vault}/.password", "w+") as f:
                 print("Cached password inside the vault.")
                 f.write(password)
