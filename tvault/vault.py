@@ -211,9 +211,12 @@ def main():
                 print(f"Vault '{vault}' already exists.")
                 sys.exit(1)
             print(f"Please set a password to encrypt the vault.")
-            password1 = getpass.getpass(prompt="Enter password 1st time:")
-            password2 = getpass.getpass(prompt="Enter password 2nd time:")
-            assert password1 == password2, "Passwords do not match."
+            if not PASSWORD_ARG:
+                password1 = getpass.getpass(prompt="Enter password 1st time:")
+                password2 = getpass.getpass(prompt="Enter password 2nd time:")
+                assert password1 == password2, "Passwords do not match."
+            else:
+                password1 = PASSWORD_ARG
             os.mkdir(vault)
             print(f"Vault '{vault}' created successfully.")
             with open(f"{vault}/.password", "w+") as f:
