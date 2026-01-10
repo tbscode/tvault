@@ -11,4 +11,6 @@ python3 -m venv venv
 source venv/bin/activate
 pip install git+https://github.com/tbscode/tvault
 
-echo "alias tvault='/home/$USER/.config/tvault/venv/bin/tvault'" >> /home/$USER/.bashrc
+# Allow using .bashrc or .bashrc.local ( for immutable system like NixOS )
+echo "alias tvault='/home/$USER/.config/tvault/venv/bin/tvault'" >> /home/$USER/.bashrc || \
+    echo "alias tvault='/home/$USER/.config/tvault/venv/bin/tvault'" >> /home/$USER/.bashrc.local

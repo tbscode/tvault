@@ -11,5 +11,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip install git+https://github.com/tbscode/tvault
 
-awk '!/tvault=/' /home/$USER/.bashrc > /tmp/updated_rc && mv /tmp/updated_rc /home/$USER/.bashrc
-echo "alias tvault='/home/$USER/.config/tvault/venv/bin/tvault'" >> /home/$USER/.bashrc
+awk '!/tvault=/' /home/$USER/.bashrc > /tmp/updated_rc && mv /tmp/updated_rc /home/$USER/.bashrc || \
+    (awk '!/tvault=/' /home/$USER/.bashrc.local > /tmp/updated_rc && mv /tmp/updated_rc /home/$USER/.bashrc.local)
+echo "alias tvault='/home/$USER/.config/tvault/venv/bin/tvault'" >> /home/$USER/.bashrc || \
+    echo "alias tvault='/home/$USER/.config/tvault/venv/bin/tvault'" >> /home/$USER/.bashrc.local
